@@ -47226,7 +47226,7 @@ window['Runtime'] = (function Runtime(__can, __path){
 
 	    createList: function (file) {
 
-	        var extMaxHandle = 9;
+	        var extMaxHandle = 5;
 	        if (extMaxHandle) {
 	            this.extensions = new Array(extMaxHandle);
 	            this.numOfConditions = new Array(extMaxHandle);
@@ -47252,15 +47252,6 @@ window['Runtime'] = (function Runtime(__can, __path){
 	            this.addExt(e);
 	            e = new CExtLoad();
 	            e.handle = 4;
-	            this.addExt(e);
-	            e = new CExtLoad();
-	            e.handle = 5;
-	            this.addExt(e);
-	            e = new CExtLoad();
-	            e.handle = 7;
-	            this.addExt(e);
-	            e = new CExtLoad();
-	            e.handle = 8;
 	            this.addExt(e);
 	            // INCLUDE_ADDEXT
 	        }
@@ -47323,13 +47314,7 @@ window['Runtime'] = (function Runtime(__can, __path){
 	        case 3:
 	        return new CRunKcButton();
 	        case 4:
-	        return new CRunKcArray();
-	        case 5:
-	        return new CRunkcini();
-	        case 7:
 	        return new CRunStringTokenizer();
-	        case 8:
-	        return new CRunHTML5();
 	            // INCLUDE_NEWEXT
 	        }
 
@@ -52052,7 +52037,8 @@ window['Runtime'] = (function Runtime(__can, __path){
 			var object = null;
 
 			// STARTCUT
-			// ENDCUT
+
+	if (extName=="box2dstatic") object=new CRunMvtbox2dstatic();		// ENDCUT
 
 			/*
 			 if (document.debug==undefined)
@@ -72945,1279 +72931,6 @@ window['Runtime'] = (function Runtime(__can, __path){
 
 	//----------------------------------------------------------------------------------
 	//
-	// CRunKcArray: array object
-	//
-	//----------------------------------------------------------------------------------
-	/* Copyright (c) 1996-2012 Clickteam
-	 *
-	 * This source code is part of the HTML5 exporter for Clickteam Multimedia Fusion 2.
-	 *
-	 * Permission is hereby granted to any person obtaining a legal copy
-	 * of Clickteam Multimedia Fusion 2 to use or modify this source code for
-	 * debugging, optimizing, or customizing applications created with
-	 * Clickteam Multimedia Fusion 2.
-	 * Any other use of this source code is prohibited.
-	 *
-	 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	 * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-	 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-	 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-	 * IN THE SOFTWARE.
-	 */
-	CRunKcArray.ARRAY_GLOBAL = 0x0008;
-	CRunKcArray.ARRAY_TYPENUM = 0x0001;
-	CRunKcArray.ARRAY_TYPETXT = 0x0002;
-	CRunKcArray.INDEX_BASE1 = 0x0004;
-
-	CRunKcArray.ACT_SETINDEXA = 0;
-	CRunKcArray.ACT_SETINDEXB = 1;
-	CRunKcArray.ACT_SETINDEXC = 2;
-	CRunKcArray.ACT_ADDINDEXA = 3;
-	CRunKcArray.ACT_ADDINDEXB = 4;
-	CRunKcArray.ACT_ADDINDEXC = 5;
-	CRunKcArray.ACT_WRITEVALUE = 6;
-	CRunKcArray.ACT_WRITESTRING = 7;
-	CRunKcArray.ACT_CLEARARRAY = 8;
-	CRunKcArray.ACT_LOAD = 9;
-	CRunKcArray.ACT_LOADSELECTOR = 10;
-	CRunKcArray.ACT_SAVE = 11;
-	CRunKcArray.ACT_SAVESELECTOR = 12;
-	CRunKcArray.ACT_WRITEVALUE_X = 13;
-	CRunKcArray.ACT_WRITEVALUE_XY = 14;
-	CRunKcArray.ACT_WRITEVALUE_XYZ = 15;
-	CRunKcArray.ACT_WRITESTRING_X = 16;
-	CRunKcArray.ACT_WRITESTRING_XY = 17;
-	CRunKcArray.ACT_WRITESTRING_XYZ = 18;
-
-	CRunKcArray.CND_INDEXAEND = 0;
-	CRunKcArray.CND_INDEXBEND = 1;
-	CRunKcArray.CND_INDEXCEND = 2;
-
-	CRunKcArray.EXP_INDEXA = 0;
-	CRunKcArray.EXP_INDEXB = 1;
-	CRunKcArray.EXP_INDEXC = 2;
-	CRunKcArray.EXP_READVALUE = 3;
-	CRunKcArray.EXP_READSTRING = 4;
-	CRunKcArray.EXP_READVALUE_X = 5;
-	CRunKcArray.EXP_READVALUE_XY = 6;
-	CRunKcArray.EXP_READVALUE_XYZ = 7;
-	CRunKcArray.EXP_READSTRING_X = 8;
-	CRunKcArray.EXP_READSTRING_XY = 9;
-	CRunKcArray.EXP_READSTRING_XYZ = 10;
-	CRunKcArray.EXP_DIMX = 11;
-	CRunKcArray.EXP_DIMY = 12;
-	CRunKcArray.EXP_DIMZ = 13;
-
-	function CRunKcArray()
-	{
-		this.pArray = null;
-	}
-	CRunKcArray.prototype = CServices.extend(new CRunExtension(),
-		{
-			getNumberOfConditions: function ()
-			{
-				return 3;
-			},
-
-			createRunObject: function (file, cob, version)
-			{
-				var rhPtr = this.ho.hoAdRunHeader;
-
-				var lDimensionX = file.readAInt();
-				var lDimensionY = file.readAInt();
-				var lDimensionZ = file.readAInt();
-				var lFlags = file.readAInt();
-
-				var pData = null;
-				if ((lFlags & CRunKcArray.ARRAY_GLOBAL) != 0)
-				{
-					var pExtData = rhPtr.getStorage(this.ho.hoIdentifier);
-					if (pExtData == null) //first global object of this type
-					{
-						this.pArray = new CRunKcArrayData(lFlags, lDimensionX, lDimensionY, lDimensionZ);
-						pData = new CRunKcArrayCGlobalDataList();
-						pData.AddObject(this);
-						rhPtr.addStorage(pData, this.ho.hoIdentifier);
-					}
-					else
-					{
-						pData = pExtData;
-						var found = pData.FindObject(this.ho.hoOiList.oilName);
-						if (found != null) //found array object of same name
-						{
-							this.pArray = found; //share data
-						}
-						else
-						{
-							this.pArray = new CRunKcArrayData(lFlags, lDimensionX, lDimensionY, lDimensionZ);
-							pData.AddObject(this);
-						}
-					}
-				}
-				else
-				{
-					this.pArray = new CRunKcArrayData(lFlags, lDimensionX, lDimensionY, lDimensionZ);
-				}
-				return true;
-			},
-
-			// Conditions
-			// --------------------------------------------------
-			condition:       function (num, cnd)
-			{
-				switch (num)
-				{
-					case CRunKcArray.CND_INDEXAEND:
-						return this.EndIndexA();
-					case CRunKcArray.CND_INDEXBEND:
-						return this.EndIndexB();
-					case CRunKcArray.CND_INDEXCEND:
-						return this.EndIndexC();
-				}
-				return false;
-			},
-
-			EndIndexA: function ()
-			{
-				if (this.pArray.lIndexA >= this.pArray.lDimensionX - 1)
-				{
-					return true;
-				}
-				return false;
-			},
-
-			EndIndexB: function ()
-			{
-				if (this.pArray.lIndexB >= this.pArray.lDimensionY - 1)
-				{
-					return true;
-				}
-				return false;
-			},
-
-			EndIndexC: function ()
-			{
-				if (this.pArray.lIndexC >= this.pArray.lDimensionZ - 1)
-				{
-					return true;
-				}
-				return false;
-			},
-
-			// Actions
-			// -------------------------------------------------
-			action:    function (num, act)
-			{
-				switch (num)
-				{
-					case CRunKcArray.ACT_SETINDEXA:
-						this.SetIndexA(act.getParamExpression(this.rh, 0));
-						break;
-					case CRunKcArray.ACT_SETINDEXB:
-						this.SetIndexB(act.getParamExpression(this.rh, 0));
-						break;
-					case CRunKcArray.ACT_SETINDEXC:
-						this.SetIndexC(act.getParamExpression(this.rh, 0));
-						break;
-					case CRunKcArray.ACT_ADDINDEXA:
-						this.IncIndexA();
-						break;
-					case CRunKcArray.ACT_ADDINDEXB:
-						this.IncIndexB();
-						break;
-					case CRunKcArray.ACT_ADDINDEXC:
-						this.IncIndexC();
-						break;
-					case CRunKcArray.ACT_WRITEVALUE:
-						this.WriteValue(act.getParamExpression(this.rh, 0));
-						break;
-					case CRunKcArray.ACT_WRITESTRING:
-						this.WriteString(act.getParamExpString(this.rh, 0));
-						break;
-					case CRunKcArray.ACT_CLEARARRAY:
-						this.ClearArray();
-						break;
-					case CRunKcArray.ACT_LOAD:
-						this.load(CServices.parseName(act.getParamFilename(this.rh, 0)));
-						break;
-					case CRunKcArray.ACT_LOADSELECTOR:
-						break;
-					case CRunKcArray.ACT_SAVE:
-						this.save(CServices.parseName(act.getParamFilename(this.rh, 0)));
-						break;
-					case CRunKcArray.ACT_SAVESELECTOR:
-						break;
-					case CRunKcArray.ACT_WRITEVALUE_X:
-						this.WriteValue_X(act.getParamExpression(this.rh, 0),
-							act.getParamExpression(this.rh, 1));
-						break;
-					case CRunKcArray.ACT_WRITEVALUE_XY:
-						this.WriteValue_XY(act.getParamExpression(this.rh, 0),
-							act.getParamExpression(this.rh, 1),
-							act.getParamExpression(this.rh, 2));
-						break;
-					case CRunKcArray.ACT_WRITEVALUE_XYZ:
-						this.WriteValue_XYZ(act.getParamExpression(this.rh, 0),
-							act.getParamExpression(this.rh, 1),
-							act.getParamExpression(this.rh, 2),
-							act.getParamExpression(this.rh, 3));
-						break;
-					case CRunKcArray.ACT_WRITESTRING_X:
-						this.WriteString_X(act.getParamExpString(this.rh, 0),
-							act.getParamExpression(this.rh, 1));
-						break;
-					case CRunKcArray.ACT_WRITESTRING_XY:
-						this.WriteString_XY(act.getParamExpString(this.rh, 0),
-							act.getParamExpression(this.rh, 1),
-							act.getParamExpression(this.rh, 2));
-						break;
-					case CRunKcArray.ACT_WRITESTRING_XYZ:
-						this.WriteString_XYZ(act.getParamExpString(this.rh, 0),
-							act.getParamExpression(this.rh, 1),
-							act.getParamExpression(this.rh, 2),
-							act.getParamExpression(this.rh, 3));
-						break;
-				}
-			},
-			SetIndexA: function (i)
-			{
-				if ((this.pArray.lFlags & CRunKcArray.INDEX_BASE1) != 0)
-				{
-					this.pArray.lIndexA = i - 1;
-				}
-				else
-				{
-					this.pArray.lIndexA = i;
-				}
-			},
-
-			SetIndexB: function (i)
-			{
-				if ((this.pArray.lFlags & CRunKcArray.INDEX_BASE1) != 0)
-				{
-					this.pArray.lIndexB = i - 1;
-				}
-				else
-				{
-					this.pArray.lIndexB = i;
-				}
-			},
-
-			SetIndexC: function (i)
-			{
-				if ((this.pArray.lFlags & CRunKcArray.INDEX_BASE1) != 0)
-				{
-					this.pArray.lIndexC = i - 1;
-				}
-				else
-				{
-					this.pArray.lIndexC = i;
-				}
-			},
-
-			IncIndexA: function ()
-			{
-				this.pArray.lIndexA++;
-			},
-
-			IncIndexB: function ()
-			{
-				this.pArray.lIndexB++;
-			},
-
-			IncIndexC: function ()
-			{
-				this.pArray.lIndexC++;
-			},
-
-			WriteValue: function (value)
-			{
-				this.WriteValueXYZ(value, this.pArray.lIndexA, this.pArray.lIndexB, this.pArray.lIndexC);
-			},
-
-			WriteString: function (value)
-			{
-				this.WriteStringXYZ(value, this.pArray.lIndexA, this.pArray.lIndexB, this.pArray.lIndexC);
-			},
-
-			ClearArray: function ()
-			{
-				this.pArray.clean(false);
-			},
-
-			WriteValue_X: function (value, x)
-			{
-				x -= this.pArray.oneBased();
-				this.WriteValueXYZ(value, x, this.pArray.lIndexB, this.pArray.lIndexC);
-			},
-
-			WriteValue_XY: function (value, x, y)
-			{
-				x -= this.pArray.oneBased();
-				y -= this.pArray.oneBased();
-				this.WriteValueXYZ(value, x, y, this.pArray.lIndexC);
-			},
-
-			WriteValue_XYZ: function (value, x, y, z)
-			{
-				x -= this.pArray.oneBased();
-				y -= this.pArray.oneBased();
-				z -= this.pArray.oneBased();
-				this.WriteValueXYZ(value, x, y, z);
-			},
-
-			WriteValueXYZ: function (value, x, y, z)
-			{
-				//x,y,z should be fixed for 1-based index if used before this function
-				if ((x < 0) || (y < 0) || (z < 0))
-				{
-					return;
-				}
-				if ((this.pArray.lFlags & CRunKcArray.ARRAY_TYPENUM) != 0)
-				{
-					// Expand if required
-					if ((x >= this.pArray.lDimensionX) || (y >= this.pArray.lDimensionY) || (z >= this.pArray.lDimensionZ))
-					{
-						var newDimX = Math.max(this.pArray.lDimensionX, x + 1);
-						var newDimY = Math.max(this.pArray.lDimensionY, y + 1);
-						var newDimZ = Math.max(this.pArray.lDimensionZ, z + 1);
-						this.pArray.expand(newDimX, newDimY, newDimZ);
-					}
-					//write
-					this.pArray.lIndexA = x;
-					this.pArray.lIndexB = y;
-					this.pArray.lIndexC = z;
-					this.pArray.numberArray[z * this.pArray.lDimensionY * this.pArray.lDimensionX + y * this.pArray.lDimensionX + x] = value;
-				}
-			},
-
-			WriteString_X: function (value, x)
-			{
-				x -= this.pArray.oneBased();
-				this.WriteStringXYZ(value, x, this.pArray.lIndexB, this.pArray.lIndexC);
-			},
-
-			WriteString_XY: function (value, x, y)
-			{
-				x -= this.pArray.oneBased();
-				y -= this.pArray.oneBased();
-				this.WriteStringXYZ(value, x, y, this.pArray.lIndexC);
-			},
-
-			WriteString_XYZ: function (value, x, y, z)
-			{
-				x -= this.pArray.oneBased();
-				y -= this.pArray.oneBased();
-				z -= this.pArray.oneBased();
-				this.WriteStringXYZ(value, x, y, z);
-			},
-
-			WriteStringXYZ: function (value, x, y, z)
-			{
-				//x,y,z should be fixed for 1-based index if used before this function
-				if ((x < 0) || (y < 0) || (z < 0))
-				{
-					return;
-				}
-				if ((this.pArray.lFlags & CRunKcArray.ARRAY_TYPETXT) != 0)
-				{
-					// Expand if required
-					if ((x >= this.pArray.lDimensionX) || (y >= this.pArray.lDimensionY) || (z >= this.pArray.lDimensionZ))
-					{
-						var newDimX = Math.max(this.pArray.lDimensionX, x + 1);
-						var newDimY = Math.max(this.pArray.lDimensionY, y + 1);
-						var newDimZ = Math.max(this.pArray.lDimensionZ, z + 1);
-						this.pArray.expand(newDimX, newDimY, newDimZ);
-					}
-					//write
-					this.pArray.lIndexA = x;
-					this.pArray.lIndexB = y;
-					this.pArray.lIndexC = z;
-					this.pArray.stringArray[z * this.pArray.lDimensionY * this.pArray.lDimensionX + y * this.pArray.lDimensionX + x] = value;
-				}
-			},
-
-			save:       function (name)
-			{
-				var dimX = this.pArray.lDimensionX;
-				var dimY = this.pArray.lDimensionY;
-				var dimZ = this.pArray.lDimensionZ;
-				var flags = this.pArray.lFlags;
-				var text = "";
-				text += flags.toString() + CIni.separator;
-				text += dimX.toString() + CIni.separator;
-				text += dimY.toString() + CIni.separator;
-				text += dimZ.toString() + CIni.separator;
-				var z, y, x;
-				if (flags & CRunKcArray.ARRAY_TYPENUM)
-				{
-					for (z = 0; z < dimZ; z++)
-					{
-						for (y = 0; y < dimY; y++)
-						{
-							for (x = 0; x < dimX; x++)
-							{
-								text += this.pArray.numberArray[z * dimY * dimX + y * dimX + x].toString() + CIni.separator;
-							}
-						}
-					}
-				}
-				else if (CRunKcArray.ARRAY_TYPETXT)
-				{
-					for (z = 0; z < dimZ; z++)
-					{
-						for (y = 0; y < dimY; y++)
-						{
-							for (x = 0; x < dimX; x++)
-							{
-								text += this.pArray.stringArray[z * dimY * dimX + y * dimX + x] + CIni.separator;
-							}
-						}
-					}
-				}
-				localStorage.setItem(name, text);
-			},
-			load:       function (name)
-			{
-				var text = localStorage.getItem(name);
-				if (text)
-				{
-					var flags, begin = 0, end;
-					var dimX, dimY, dimZ;
-
-					end = text.indexOf(CIni.separator, 0);
-					flags = parseInt(text.substring(begin, end));
-					begin = end + CIni.separator.length;
-
-					end = text.indexOf(CIni.separator, begin);
-					dimX = parseInt(text.substring(begin, end));
-					begin = end + CIni.separator.length;
-
-					end = text.indexOf(CIni.separator, begin);
-					dimY = parseInt(text.substring(begin, end));
-					begin = end + CIni.separator.length;
-
-					end = text.indexOf(CIni.separator, begin);
-					dimZ = parseInt(text.substring(begin, end));
-					begin = end + CIni.separator.length;
-
-					var z, y, x, newArray;
-					if (flags & CRunKcArray.ARRAY_TYPENUM)
-					{
-						newArray = new Array(dimZ * dimY * dimX);
-						for (z = 0; z < dimZ; z++)
-						{
-							for (y = 0; y < dimY; y++)
-							{
-								for (x = 0; x < dimX; x++)
-								{
-									end = text.indexOf(CIni.separator, begin);
-									newArray[z * dimY * dimX + y * dimX + x] = parseInt(text.substring(begin, end));
-									begin = end + CIni.separator.length;
-								}
-							}
-						}
-						//if no try error thus far
-						if (flags != this.pArray.lFlags || dimX != this.pArray.lDimensionX || dimY != this.pArray.lDimensionY || dimZ != this.pArray.lDimensionZ)
-						{
-							this.pArray.lFlags = flags;
-							this.pArray.lDimensionX = dimX;
-							this.pArray.lDimensionY = dimY;
-							this.pArray.lDimensionZ = dimZ;
-							this.pArray.lIndexA = 0;
-							this.pArray.lIndexB = 0;
-							this.pArray.lIndexC = 0;
-						}
-						this.pArray.numberArray = newArray;
-					}
-					else if (CRunKcArray.ARRAY_TYPETXT)
-					{
-						newArray = new Array(dimZ * dimY * dimX);
-						for (z = 0; z < dimZ; z++)
-						{
-							for (y = 0; y < dimY; y++)
-							{
-								for (x = 0; x < dimX; x++)
-								{
-									end = text.indexOf(CIni.separator, begin);
-									newArray[z * dimY * dimX + y * dimX + x] = text.substring(begin, end);
-									begin = end + CIni.separator.length;
-								}
-							}
-						}
-						//if no try error thus far
-						if (flags != this.pArray.lFlags || dimX != this.pArray.lDimensionX || dimY != this.pArray.lDimensionY || dimZ != this.pArray.lDimensionZ)
-						{
-							this.pArray.lFlags = flags;
-							this.pArray.lDimensionX = dimX;
-							this.pArray.lDimensionY = dimY;
-							this.pArray.lDimensionZ = dimZ;
-							this.pArray.lIndexA = 0;
-							this.pArray.lIndexB = 0;
-							this.pArray.lIndexC = 0;
-						}
-						this.pArray.stringArray = newArray;
-					}
-					return;
-				}
-
-				var file = null;
-				var efile = this.rh.rhApp.getEmbeddedFile(name);
-				if (efile != null)
-				{
-					file = efile.open();
-				}
-				/*
-				 if (file==null)
-				 {
-				 file=new CFile();
-				 file.openFile(name);
-				 if (file.ccfBytes.length==0)
-				 {
-				 file=null;
-				 }
-				 }
-				 */
-				var x, y, z;
-				if (file != null)
-				{
-					file.setUnicode(false);
-					var headerHead = file.readAString(9);
-					file.setUnicode(true);
-					var newArray;
-					if (headerHead == "CNC ARRAY" || headerHead == "MFU ARRAY")
-					{
-						file.skipBytes(1);
-						var version = file.readAShort();
-						var revision = file.readAShort();
-						if (((version == 1) || (version == 2)) && (revision == 0))
-						{
-							var dimX = file.readAInt();
-							var dimY = file.readAInt();
-							var dimZ = file.readAInt();
-							var flags = file.readAInt();
-							//header read
-							if ((dimX >= 0) && (dimY >= 0) && (dimZ >= 0))
-							{
-								if ((flags & CRunKcArray.ARRAY_TYPENUM) != 0)
-								{
-									newArray = new Array(dimZ * dimY * dimX);
-									for (z = 0; z < dimZ; z++)
-									{
-										for (y = 0; y < dimY; y++)
-										{
-											for (x = 0; x < dimX; x++)
-											{
-												newArray[z * dimY * dimX + y * dimX + x] = file.readAInt();
-											}
-										}
-									}
-									//if no try error thus far
-									if (flags != this.pArray.lFlags || dimX != this.pArray.lDimensionX || dimY != this.pArray.lDimensionY || dimZ != this.pArray.lDimensionZ)
-									{
-										this.pArray.lFlags = flags;
-										this.pArray.lDimensionX = dimX;
-										this.pArray.lDimensionY = dimY;
-										this.pArray.lDimensionZ = dimZ;
-										this.pArray.lIndexA = 0;
-										this.pArray.lIndexB = 0;
-										this.pArray.lIndexC = 0;
-									}
-									this.pArray.numberArray = newArray;
-									//fin
-								}
-								else if ((flags & CRunKcArray.ARRAY_TYPETXT) != 0)
-								{
-									newArray = new Array(dimZ * dimY * dimX);
-									for (z = 0; z < dimZ; z++)
-									{
-										for (y = 0; y < dimY; y++)
-										{
-											for (x = 0; x < dimX; x++)
-											{
-												var length = file.readAInt();
-												if (length > 0)
-												{
-													newArray[z * dimY * dimX + y * dimX + x] = file.readAString(length);
-												}
-											}
-										}
-									}
-									//if no try error thus far
-									if (flags != this.pArray.lFlags || dimX != this.pArray.lDimensionX || dimY != this.pArray.lDimensionY || dimZ != this.pArray.lDimensionZ)
-									{
-										this.pArray.lFlags = flags;
-										this.pArray.lDimensionX = dimX;
-										this.pArray.lDimensionY = dimY;
-										this.pArray.lDimensionZ = dimZ;
-										this.pArray.lIndexA = 0;
-										this.pArray.lIndexB = 0;
-										this.pArray.lIndexC = 0;
-									}
-									this.pArray.stringArray = newArray;
-									//fin
-								}
-							}
-						}
-					}
-				}
-			},
-
-			// Expressions
-			// --------------------------------------------
-			expression: function (num)
-			{
-				switch (num)
-				{
-					case CRunKcArray.EXP_INDEXA:
-						return this.IndexA();
-					case CRunKcArray.EXP_INDEXB:
-						return this.IndexB();
-					case CRunKcArray.EXP_INDEXC:
-						return this.IndexC();
-					case CRunKcArray.EXP_READVALUE:
-						return this.ReadValue();
-					case CRunKcArray.EXP_READSTRING:
-						return this.ReadString();
-					case CRunKcArray.EXP_READVALUE_X:
-						return this.ReadValue_X(this.ho.getExpParam());
-					case CRunKcArray.EXP_READVALUE_XY:
-						return this.ReadValue_XY(this.ho.getExpParam(),
-							this.ho.getExpParam());
-					case CRunKcArray.EXP_READVALUE_XYZ:
-						return this.ReadValue_XYZ(this.ho.getExpParam(),
-							this.ho.getExpParam(),
-							this.ho.getExpParam());
-					case CRunKcArray.EXP_READSTRING_X:
-						return this.ReadString_X(this.ho.getExpParam());
-					case CRunKcArray.EXP_READSTRING_XY:
-						return this.ReadString_XY(this.ho.getExpParam(),
-							this.ho.getExpParam());
-					case CRunKcArray.EXP_READSTRING_XYZ:
-						return this.ReadString_XYZ(this.ho.getExpParam(),
-							this.ho.getExpParam(),
-							this.ho.getExpParam());
-					case CRunKcArray.EXP_DIMX:
-						return this.Exp_DimX();
-					case CRunKcArray.EXP_DIMY:
-						return this.Exp_DimY();
-					case CRunKcArray.EXP_DIMZ:
-						return this.Exp_DimZ();
-				}
-				return (0);
-			},
-
-			IndexA: function ()
-			{
-				if ((this.pArray.lFlags & CRunKcArray.INDEX_BASE1) != 0)
-				{
-					return (this.pArray.lIndexA + 1);
-				}
-				else
-				{
-					return (this.pArray.lIndexA);
-				}
-			},
-
-			IndexB: function ()
-			{
-				if ((this.pArray.lFlags & CRunKcArray.INDEX_BASE1) != 0)
-				{
-					return (this.pArray.lIndexB + 1);
-				}
-				else
-				{
-					return (this.pArray.lIndexB);
-				}
-			},
-
-			IndexC: function ()
-			{
-				if ((this.pArray.lFlags & CRunKcArray.INDEX_BASE1) != 0)
-				{
-					return (this.pArray.lIndexC + 1);
-				}
-				else
-				{
-					return (this.pArray.lIndexC);
-				}
-			},
-
-			ReadValue: function ()
-			{
-				return this.ReadValueXYZ(this.pArray.lIndexA,
-					this.pArray.lIndexB,
-					this.pArray.lIndexC);
-			},
-
-			ReadString: function ()
-			{
-				return this.ReadStringXYZ(this.pArray.lIndexA,
-					this.pArray.lIndexB,
-					this.pArray.lIndexC);
-			},
-
-			ReadValue_X: function (x)
-			{
-				return this.ReadValueXYZ(x - this.pArray.oneBased(),
-					this.pArray.lIndexB,
-					this.pArray.lIndexC);
-			},
-
-			ReadValue_XY: function (x, y)
-			{
-				return this.ReadValueXYZ(x - this.pArray.oneBased(),
-					y - this.pArray.oneBased(),
-					this.pArray.lIndexC);
-			},
-
-			ReadValue_XYZ: function (x, y, z)
-			{
-				return this.ReadValueXYZ(x - this.pArray.oneBased(),
-					y - this.pArray.oneBased(),
-					z - this.pArray.oneBased());
-			},
-
-			ReadValueXYZ: function (x, y, z)
-			{
-				//x y z should be fixed for 1-based, if so
-				if ((x < 0) || (y < 0) || (z < 0))
-				{
-					return (0);
-				}
-				if ((this.pArray.lFlags & CRunKcArray.ARRAY_TYPENUM) != 0)
-				{
-					if ((x < this.pArray.lDimensionX) && (y < this.pArray.lDimensionY) && (z < this.pArray.lDimensionZ))
-					{
-						var position = z * this.pArray.lDimensionY * this.pArray.lDimensionX + y * this.pArray.lDimensionX + x;
-						var value = this.pArray.numberArray[position];
-						if (value != 0)
-						{
-							var toto = 0;
-						}
-						return (this.pArray.numberArray[z * this.pArray.lDimensionY * this.pArray.lDimensionX + y * this.pArray.lDimensionX + x]);
-					}
-				}
-				return (0);
-			},
-
-			ReadString_X: function (x)
-			{
-				return this.ReadStringXYZ(x - this.pArray.oneBased(),
-					this.pArray.lIndexB,
-					this.pArray.lIndexC);
-			},
-
-			ReadString_XY: function (x, y)
-			{
-				return this.ReadStringXYZ(x - this.pArray.oneBased(),
-					y - this.pArray.oneBased(),
-					this.pArray.lIndexC);
-			},
-
-			ReadString_XYZ: function (x, y, z)
-			{
-				return this.ReadStringXYZ(x - this.pArray.oneBased(),
-					y - this.pArray.oneBased(),
-					z - this.pArray.oneBased());
-			},
-
-			ReadStringXYZ: function (x, y, z)
-			{
-				var ret = "";
-
-				//x y z should be fixed for 1-based, if so
-				if ((x >= 0) && (y >= 0) && (z >= 0))
-				{
-					if ((this.pArray.lFlags & CRunKcArray.ARRAY_TYPETXT) != 0)
-					{
-						if ((x < this.pArray.lDimensionX) && (y < this.pArray.lDimensionY) && (z < this.pArray.lDimensionZ))
-						{
-							var r = this.pArray.stringArray[z * this.pArray.lDimensionY * this.pArray.lDimensionX + y * this.pArray.lDimensionX + x];
-							if (r != null)
-							{
-								ret = r;
-							}
-						}
-					}
-				}
-				return ret;
-			},
-
-			Exp_DimX: function ()
-			{
-				return (this.pArray.lDimensionX);
-			},
-
-			Exp_DimY: function ()
-			{
-				return (this.pArray.lDimensionY);
-			},
-
-			Exp_DimZ: function ()
-			{
-				return (this.pArray.lDimensionZ);
-			}
-		});
-
-	// Helper objects
-	// ----------------------------------------------------------------
-	function CRunKcArrayCGlobalDataList()
-	{
-		this.dataList = new CArrayList();
-		this.names = new CArrayList();
-	}
-	CRunKcArrayCGlobalDataList.prototype =
-	{
-		FindObject: function (objectName)
-		{
-			var i;
-			for (i = 0; i < this.names.size(); i++)
-			{
-				var s = this.names.get(i);
-				if (s == objectName)
-				{
-					return this.dataList.get(i);
-				}
-			}
-			return null;
-		},
-		AddObject:  function (o)
-		{
-			this.dataList.add(o.pArray);
-			this.names.add(o.ho.hoOiList.oilName);
-		}
-	}
-
-	function CRunKcArrayData(flags, dimX, dimY, dimZ)
-	{
-		this.lIndexA = 0;
-		this.lIndexB = 0;
-		this.lIndexC = 0;
-		dimX = Math.max(1, dimX);
-		dimY = Math.max(1, dimY);
-		dimZ = Math.max(1, dimZ);
-
-		this.lFlags = flags;
-		this.lDimensionX = dimX;
-		this.lDimensionY = dimY;
-		this.lDimensionZ = dimZ;
-
-	    //prepare arrays for first time
-		this.clean(false);
-	}
-	CRunKcArrayData.prototype =
-	{
-		oneBased: function ()
-		{
-			if ((this.lFlags & 0x0004) != 0)     // INDEX_BASE1
-			{
-				return 1;
-			}
-			return 0;
-		},
-		expand: function (newX, newY, newZ) {
-		    //inputs should always be equal or larger than current dimensions
-		    var oldX = this.lDimensionX;
-		    var oldY = this.lDimensionY;
-		    var oldZ = this.lDimensionZ;
-		    var oldTotal = oldX * oldY * oldZ;
-		    var newTotal = newX * newY * newZ;
-		    var x, y, z;
-
-		    //get array pointers
-		    var oldArray;
-		    var nullValue;
-
-		    if ((this.lFlags & 0x0001) != 0) {
-		        //ARRAY_TYPENUM
-		        oldArray = this.numberArray;
-		        nullValue = 0;
-		    } else {
-		        //ARRAY_TYPETXT
-		        oldArray = this.stringArray;
-		        nullValue = null;
-		    }
-
-		    var newArray = new Array(newTotal).fill(nullValue);
-
-		    //copy old data
-		    for (z = 0; z < oldZ; z++) {
-		        for (y = 0; y < oldY; y++) {
-		            for (x = 0; x < oldX; x++) {
-		                newArray[z * newY * newX + y * newX + x] = oldArray[z * oldY * oldX + y * oldX + x];
-		            }
-		        }
-		    }
-
-		    //update array pointers
-		    if ((this.lFlags & 0x0001) != 0) {
-		        //ARRAY_TYPENUM
-		        this.numberArray = newArray;
-		    } else {
-		        //ARRAY_TYPETXT
-		        this.stringArray = newArray;
-		    }
-
-		    //update dimensions
-		    this.lDimensionX = newX;
-		    this.lDimensionY = newY;
-		    this.lDimensionZ = newZ;
-		},
-		clean: function (nullString) {
-		    var total = this.lDimensionX * this.lDimensionY * this.lDimensionZ;
-
-		    if ((this.lFlags & 0x0001) != 0) {
-		        //ARRAY_TYPENUM
-		        if (this.numberArray == null) {
-		            this.numberArray = new Array(total);
-		        }
-
-		        for (index = 0; index < total; index++) {
-		            this.numberArray[index] = 0;
-		        }
-
-		    } else if ((this.lFlags & 0x0002) != 0) {
-		        //ARRAY_TYPETXT
-		        if (this.stringArray == null) {
-		            this.stringArray = new Array(total);
-		        }
-
-		        //check what format string should have
-		        if (nullString) {
-		            //null
-		            for (index = 0; index < total; index++) {
-		                this.stringArray[index] = null;
-		            }
-		        } else {
-		            //empty string
-		            for (index = 0; index < total; index++) {
-		                this.stringArray[index] = "";
-		            }
-		        }
-		    }
-		}
-	}
-		
-	//----------------------------------------------------------------------------------
-	//
-	// CRUNKCINI : objet INI
-	//
-	//----------------------------------------------------------------------------------
-	/* Copyright (c) 1996-2012 Clickteam
-	 *
-	 * This source code is part of the HTML5 exporter for Clickteam Multimedia Fusion 2.
-	 *
-	 * Permission is hereby granted to any person obtaining a legal copy
-	 * of Clickteam Multimedia Fusion 2 to use or modify this source code for
-	 * debugging, optimizing, or customizing applications created with
-	 * Clickteam Multimedia Fusion 2.
-	 * Any other use of this source code is prohibited.
-	 *
-	 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	 * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-	 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-	 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-	 * IN THE SOFTWARE.
-	 */
-	CRunkcini.INI_FULLPATH = 0x0002;
-	CRunkcini.INI_FULLPATHINI_APPFOLDER = 0x0004;
-	CRunkcini.INI_FULLPATHINI_UTF8 = 0x0008;
-	function CRunkcini()
-	{
-		this.ini = null;
-		this.iniFlags = 0;
-		this.iniName = null;
-		this.iniCurrentGroup = null;
-		this.iniCurrentItem = null;
-		this.changeCounter = 0;
-	}
-
-	CRunkcini.prototype = CServices.extend(new CRunExtension(),
-		{
-			getNumberOfConditions: function ()
-			{
-				return 0;
-			},
-			createRunObject:       function (file, cob, version)
-			{
-				this.iniFlags = file.readAShort();
-				this.iniName = CServices.parseName(file.readAString());
-				if (this.iniName.length == 0)
-				{
-					this.iniName = "Ini.ini";
-				}
-				var flags = 0;
-				if (this.iniFlags & CRunkcini.INI_FULLPATHINI_UTF8)
-					flags |= CIni.INIFLAG_UTF8;
-				this.ini = new CIni(this.rh.rhApp, flags);
-				this.iniCurrentGroup = "Group";
-				this.iniCurrentItem = "Item";
-				this.changeCounter = 0;
-				return false;
-			},
-			handleRunObject:       function ()
-			{
-				if (this.changeCounter > 0)
-				{
-					this.changeCounter--;
-					if (this.changeCounter == 0)
-					{
-						this.ini.saveIni();
-					}
-				}
-				return 0;
-			},
-			destroyRunObject:      function (bFast)
-			{
-				this.ini.saveIni();
-			},
-
-			// Actions
-			// -------------------------------------------------
-			action:                function (num, act)
-			{
-				switch (num)
-				{
-					case 0:
-						this.SetCurrentGroup(act);
-						break;
-					case 1:
-						this.SetCurrentItem(act);
-						break;
-					case 2:
-						this.SetValue(act);
-						break;
-					case 3:
-						this.SavePosition(act);
-						break;
-					case 4:
-						this.LoadPosition(act);
-						break;
-					case 5:
-						this.SetString(act);
-						break;
-					case 6:
-						this.SetCurrentFile(act);
-						break;
-					case 7:
-						this.SetValueItem(act);
-						break;
-					case 8:
-						this.SetValueGroupItem(act);
-						break;
-					case 9:
-						this.SetStringItem(act);
-						break;
-					case 10:
-						this.SetStringGroupItem(act);
-						break;
-					case 11:
-						this.DeleteItem(act);
-						break;
-					case 12:
-						this.DeleteGroupItem(act);
-						break;
-					case 13:
-						this.DeleteGroup(act);
-						break;
-				}
-			},
-
-			SetCurrentGroup: function (act)
-			{
-				this.iniCurrentGroup = act.getParamExpString(this.rh, 0);
-			},
-
-			SetCurrentItem: function (act)
-			{
-				this.iniCurrentItem = act.getParamExpString(this.rh, 0);
-			},
-
-			SetValue: function (act)
-			{
-				var value = act.getParamExpression(this.rh, 0);
-				var s = value.toString();
-				this.ini.writePrivateProfileString(this.iniCurrentGroup, this.iniCurrentItem, s, this.iniName);
-				this.changeCounter = 10;
-			},
-
-			SavePosition: function (act)
-			{
-				var hoPtr = act.getParamObject(this.rh, 0);
-				var s = hoPtr.hoX.toString() + "," + hoPtr.hoY.toString();
-				var item = "pos." + hoPtr.hoOiList.oilName;
-				this.ini.writePrivateProfileString(this.iniCurrentGroup, item, s, this.iniName);
-				this.changeCounter = 10;
-			},
-
-			LoadPosition: function (act)
-			{
-				var hoPtr = act.getParamObject(this.rh, 0);
-				var item = "pos." + hoPtr.hoOiList.oilName;
-				var s = this.ini.getPrivateProfileString(this.iniCurrentGroup, item, "X", this.iniName);
-				if (s != "X")
-				{
-					var virgule = s.indexOf(",");
-					var left = s.substring(0, virgule);
-					var right = s.substring(virgule + 1);
-					hoPtr.hoX = parseInt(left, 10);
-					if (isNaN(hoPtr.hoX))
-						hoPtr.hoX = 0;
-					hoPtr.hoY = parseInt(right, 10);
-					if (isNaN(hoPtr.hoY))
-						hoPtr.hoY = 0;
-					hoPtr.roc.rcChanged = true;
-					hoPtr.roc.rcCheckCollides = true;
-				}
-			},
-
-			SetString: function (act)
-			{
-				var s = act.getParamExpString(this.rh, 0);
-				this.ini.writePrivateProfileString(this.iniCurrentGroup, this.iniCurrentItem, s, this.iniName);
-				this.changeCounter = 10;
-			},
-
-			SetCurrentFile: function (act)
-			{
-				this.iniName = CServices.parseName(act.getParamExpString(this.rh, 0));
-			},
-
-			SetValueItem: function (act)
-			{
-				var item = act.getParamExpString(this.rh, 0);
-				var value = act.getParamExpression(this.rh, 1);
-				var s = value.toString();
-				this.ini.writePrivateProfileString(this.iniCurrentGroup, item, s, this.iniName);
-				this.changeCounter = 10;
-			},
-
-			SetValueGroupItem: function (act)
-			{
-				var group = act.getParamExpString(this.rh, 0);
-				var item = act.getParamExpString(this.rh, 1);
-				var value = act.getParamExpression(this.rh, 2);
-				var s = value.toString();
-				this.ini.writePrivateProfileString(group, item, s, this.iniName);
-				this.changeCounter = 10;
-			},
-
-			SetStringItem: function (act)
-			{
-				var item = act.getParamExpString(this.rh, 0);
-				var s = act.getParamExpString(this.rh, 1);
-				this.ini.writePrivateProfileString(this.iniCurrentGroup, item, s, this.iniName);
-				this.changeCounter = 10;
-			},
-
-			SetStringGroupItem: function (act)
-			{
-				var group = act.getParamExpString(this.rh, 0);
-				var item = act.getParamExpString(this.rh, 1);
-				var s = act.getParamExpString(this.rh, 2);
-				this.ini.writePrivateProfileString(group, item, s, this.iniName);
-				this.changeCounter = 10;
-			},
-
-			DeleteItem: function (act)
-			{
-				this.ini.deleteItem(this.iniCurrentGroup, act.getParamExpString(this.rh, 0), this.iniName);
-				this.changeCounter = 10;
-			},
-
-			DeleteGroupItem: function (act)
-			{
-				this.ini.deleteItem(act.getParamExpString(this.rh, 0), act.getParamExpString(this.rh, 1), this.iniName);
-				this.changeCounter = 10;
-			},
-
-			DeleteGroup: function (act)
-			{
-				this.ini.deleteGroup(act.getParamExpString(this.rh, 0), this.iniName);
-				this.changeCounter = 10;
-			},
-
-			// Expressions
-			// --------------------------------------------
-			expression:  function (num)
-			{
-				switch (num)
-				{
-					case 0:
-						return this.GetValue();
-					case 1:
-						return this.GetString();
-					case 2:
-						return this.GetValueItem();
-					case 3:
-						return this.GetValueGroupItem();
-					case 4:
-						return this.GetStringItem();
-					case 5:
-						return this.GetStringGroupItem();
-				}
-				return null;
-			},
-
-			GetValue: function ()
-			{
-				var s = this.ini.getPrivateProfileString(this.iniCurrentGroup, this.iniCurrentItem, "", this.iniName);
-				var value = 0;
-				value = parseInt(s, 10);
-				if (isNaN(value))
-					value = 0;
-				return (value);
-			},
-
-			GetString: function ()
-			{
-				return this.ini.getPrivateProfileString(this.iniCurrentGroup, this.iniCurrentItem, "", this.iniName);
-			},
-
-			GetValueItem: function ()
-			{
-				var item = this.ho.getExpParam();
-				var s = this.ini.getPrivateProfileString(this.iniCurrentGroup, item, "", this.iniName);
-				var value = parseInt(s, 10);
-				if (isNaN(value))
-					value = 0;
-				return (value);
-			},
-
-			GetValueGroupItem: function ()
-			{
-				var group = this.ho.getExpParam();
-				var item = this.ho.getExpParam();
-				var s = this.ini.getPrivateProfileString(group, item, "", this.iniName);
-				var value = parseInt(s, 10);
-				;
-				if (isNaN(value))
-					value = 0;
-				return (value);
-			},
-
-			GetStringItem: function ()
-			{
-				var item = this.ho.getExpParam();
-				return this.ini.getPrivateProfileString(this.iniCurrentGroup, item, "", this.iniName);
-			},
-
-			GetStringGroupItem: function ()
-			{
-				var group = this.ho.getExpParam();
-				var item = this.ho.getExpParam();
-				return this.ini.getPrivateProfileString(group, item, "", this.iniName);
-			}
-		});
-
-
-	//----------------------------------------------------------------------------------
-	//
 	// CRunStringTokenizer
 	//
 	//----------------------------------------------------------------------------------
@@ -74371,7 +73084,7 @@ window['Runtime'] = (function Runtime(__can, __path){
 
 	//----------------------------------------------------------------------------------
 	//
-	// CRUNHTML5
+	// CRunMvtbox2dstatic
 	//
 	//----------------------------------------------------------------------------------
 	/* Copyright (c) 1996-2012 Clickteam
@@ -74392,350 +73105,545 @@ window['Runtime'] = (function Runtime(__can, __path){
 	 * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 	 * IN THE SOFTWARE.
 	 */
-	CRunHTML5.CND_JSCRIPT_ONERROR = 0;
-	CRunHTML5.CND_ISPRELOADER = 1;
-	CRunHTML5.CND_MOUSEIN = 2;
-	CRunHTML5.CND_ISIE = 3;
-	CRunHTML5.CND_ISCHROME = 4;
-	CRunHTML5.CND_ISFIREFOX = 5;
-	CRunHTML5.CND_ISSAFARI = 6;
-	CRunHTML5.CND_ISOPERA = 7;
-	CRunHTML5.CND_ISEDGE = 8;
-	CRunHTML5.CND_LAST = 9;
-	CRunHTML5.ACT_OPENURL_SELF = 0;
-	CRunHTML5.ACT_OPENURL_PARENT = 1;
-	CRunHTML5.ACT_OPENURL_TOP = 2;
-	CRunHTML5.ACT_OPENURL_NEW = 3;
-	CRunHTML5.ACT_OPENURL_TARGET = 4;
-	CRunHTML5.ACT_JSCRIPT_RESETPARAMS = 5;
-	CRunHTML5.ACT_JSCRIPT_ADDINTPARAM = 6;
-	CRunHTML5.ACT_JSCRIPT_ADDFLOATPARAM = 7;
-	CRunHTML5.ACT_JSCRIPT_ADDSTRPARAM = 8;
-	CRunHTML5.ACT_JSCRIPT_CALLFUNCTION = 9;
-	CRunHTML5.ACT_SAVECOOKIE = 10;
-	CRunHTML5.EXP_JSCRIPT_GETINTRESULT = 0;
-	CRunHTML5.EXP_JSCRIPT_GETFLOATRESULT = 1;
-	CRunHTML5.EXP_JSCRIPT_GETSTRRESULT = 2;
-	CRunHTML5.EXP_TOTAL = 3;
-	CRunHTML5.EXP_LOADED = 4;
-	CRunHTML5.EXP_PERCENT = 5;
-	CRunHTML5.EXP_BROWSERNAME = 6;
-	CRunHTML5.EXP_BROWSERVERSION = 7;
-	CRunHTML5.EXP_BROWSEROS = 8;
-	CRunHTML5.EXP_GETCOOKIE = 9;
-	CRunHTML5.EXP_GETURL = 10;
-	CRunHTML5.EXP_GETHOST = 11;
-	CRunHTML5.EXP_GETHOSTNAME = 12;
-	CRunHTML5.EXP_GETHASH = 13;
-	CRunHTML5.EXP_GETSEARCH = 14;
+	CRunMvtbox2dstatic.B2FLAG_ROTATE = 0x0001;
+	CRunMvtbox2dstatic.B2FLAG_SMOOTH = 0x0002;
+	CRunMvtbox2dstatic.B2FLAG_BULLET = 0x0004;
+	CRunMvtbox2dstatic.B2FLAG_FIXED = 0x0008;
+	CRunMvtbox2dstatic.B2FLAG_FINECOLLISIONS = 0x0010;
+	CRunMvtbox2dstatic.LDAMPINGMULT = 0.05;
+	CRunMvtbox2dstatic.ADAMPINGMULT = 0.05;
 
-	function CRunHTML5()
+	function CRunMvtbox2dstatic()
 	{
-		this.parameters = null;
-		this.ret = 0;
-		this.bError = false;
+		this.m_type = CRunBox2DBase.MTYPE_OBJECT;
+		this.m_angle = 0;
+		this.m_friction = 0;
+		this.m_gravity = 0;
+		this.m_density = 0;
+		this.m_restitution = 0;
+		this.m_shape = 0;
+		this.m_flags = 0;
+		this.m_previousX = 0;
+		this.m_previousY = 0;
+		this.m_addVX = 0;
+		this.m_addVY = 0;
+		this.m_addVFlag = 0;
+		this.m_previousAngle = 0;
+		this.m_fixture = null;
+		this.m_scaleX = 1.0;
+		this.m_scaleY = 1.0;
+		this.m_imgWidth = 0;
+		this.m_imgHeight = 0;
+		this.m_linearDamping = 0;
+		this.m_angularDamping = 0;
+		this.m_jointType = 0;
+		this.m_jointAnchor = 0;
+		this.m_rJointLLimit = 0;
+		this.m_rJointULimit = 0;
+		this.m_dJointFrequency = 0;
+		this.m_dJointDamping = 0;
+		this.m_pJointLLimit = 0;
+		this.m_pJointULimit = 0;
+		this.m_jointName = null;
+		this.m_jointObject = null;
+		this.m_started = false;
 	}
 
-	CRunHTML5.prototype = CServices.extend(new CRunExtension(),
+	CRunMvtbox2dstatic.prototype = CServices.extend(new CRunMBase(),
 		{
-			getNumberOfConditions: function ()
+			DirAtStart: function (dirAtStart)
 			{
-				return CRunHTML5.CND_LAST;
-			},
+				var dir;
 
-			createRunObject: function (file, cob, version)
-			{
-				this.parameters = new Array();
-				return true;
-			},
-
-			condition: function (num, cnd)
-			{
-				switch (num)
+				// Compte le nombre de directions demandees
+				var cpt = 0;
+				var das = dirAtStart;
+				var das2;
+				for (var n = 0; n < 32; n++)
 				{
-					case CRunHTML5.CND_JSCRIPT_ONERROR:
-						return this.onError();
-					case CRunHTML5.CND_ISPRELOADER:
-						return this.isPreloader();
-					case CRunHTML5.CND_MOUSEIN:
-						return this.ho.hoAdRunHeader.rhApp.bMouseIn;
-					case CRunHTML5.CND_ISIE:
-						return this.rh.rhApp.browserDetect.browser == "Explorer";
-					case CRunHTML5.CND_ISCHROME:
-						return this.rh.rhApp.browserDetect.browser == "Chrome";
-					case CRunHTML5.CND_ISFIREFOX:
-						return this.rh.rhApp.browserDetect.browser == "Firefox";
-					case CRunHTML5.CND_ISSAFARI:
-						return this.rh.rhApp.browserDetect.browser == "Safari";
-					case CRunHTML5.CND_ISOPERA:
-					    return this.rh.rhApp.browserDetect.browser == "Opera";
-				    case CRunHTML5.CND_ISEDGE:
-				        return this.rh.rhApp.browserDetect.browser == "Edge";
-	            }
-				return false;
-			},
-
-			isPreloader: function ()
-			{
-			    return this.ho.hoAdRunHeader.rhApp.isPreloaderSubApp;
-			},
-			onError:     function ()
-			{
-				if ((this.ho.hoFlags & CObject.HOF_TRUEEVENT) != 0)
-					return true;
-				if (this.rh.rh4EventCount == this.onErrorCount)
-					return true;
-				return false;
-			},
-
-			action:           function (num, act)
-			{
-				switch (num)
-				{
-					case CRunHTML5.ACT_OPENURL_SELF:
-						this.actOpenURLSelf(act);
-						break;
-					case CRunHTML5.ACT_OPENURL_PARENT:
-						this.actOpenURLParent(act);
-						break;
-					case CRunHTML5.ACT_OPENURL_TOP:
-						this.actOpenURLTop(act);
-						break;
-					case CRunHTML5.ACT_OPENURL_NEW:
-						this.actOpenURLNew(act);
-						break;
-					case CRunHTML5.ACT_OPENURL_TARGET:
-						this.actOpenURLTarget(act);
-						break;
-					case CRunHTML5.ACT_JSCRIPT_RESETPARAMS:
-						this.actResetParams();
-						break;
-					case CRunHTML5.ACT_JSCRIPT_ADDINTPARAM:
-						this.actAddIntegerParam(act);
-						break;
-					case CRunHTML5.ACT_JSCRIPT_ADDFLOATPARAM:
-						this.actAddFloatParam(act);
-						break;
-					case CRunHTML5.ACT_JSCRIPT_ADDSTRPARAM:
-						this.actAddStringParam(act);
-						break;
-					case CRunHTML5.ACT_JSCRIPT_CALLFUNCTION:
-						this.actCallFunction(act);
-						break;
-					case CRunHTML5.ACT_SAVECOOKIE:
-						this.actSaveCookie(act);
-						break;
+					das2 = das;
+					das >>= 1;
+					if (das2 & 1) cpt++;
 				}
-			},
-			actSaveCookie:    function (act)
-			{
-				var cookieName = act.getParamExpString(this.rh, 0);
-				var days = act.getParamExpression(this.rh, 1);
-				var content = act.getParamExpString(this.rh, 2);
 
-				var expires = new Date();
-				if (days <= 0)
-					days = 10000;
-				expires.setTime(expires.getTime() + (1000 * 60 * 60 * 24 * days));
-				var cookie = cookieName + "=" + escape(content) + "; path=/; expires=" + expires.toGMTString();
-				document.cookie = cookie;
-			},
-			actOpenURLSelf:   function (act)
-			{
-				var url = act.getParamExpString(this.rh, 0);
-				window.open(url, "_self");
-			},
-			actOpenURLParent: function (act)
-			{
-				var url = act.getParamExpString(this.rh, 0);
-				window.open(url, "_parent");
-			},
-			pactOpenURLTop:   function (act)
-			{
-				var url = act.getParamExpString(this.rh, 0);
-				window.open(url, "_top");
-			},
-			actOpenURLNew:    function (act)
-			{
-				var url = act.getParamExpString(this.rh, 0);
-				window.open(url, "_blank");
-			},
-			actOpenURLTarget: function (act)
-			{
-				var url = act.getParamExpString(this.rh, 0);
-				var target = act.getParamExpString(this.rh, 1);
-				window.open(url, target);
-			},
-
-			actResetParams:     function ()
-			{
-				this.parameters = null;
-			},
-			actAddIntegerParam: function (act)
-			{
-				if (this.parameters == null)
-					this.parameters = new Array();
-				var p = act.getParamExpression(this.rh, 0);
-				this.parameters.push(p);
-			},
-			actAddStringParam:  function (act)
-			{
-				if (this.parameters == null)
-					this.parameters = new Array();
-				var p = act.getParamExpString(this.rh, 0);
-				this.parameters.push(p);
-			},
-			actAddFloatParam:   function (act)
-			{
-				if (this.parameters == null)
-					this.parameters = new Array();
-				var p = act.getParamExpDouble(this.rh, 0);
-				this.parameters.push(p);
-			},
-			actCallFunction:    function (act)
-			{
-				if (this.parameters == null)
-					this.parameters = new Array();
-
-				var func = act.getParamExpString(this.rh, 0);
-				this.bError = false;
-				try
+				// Une ou zero direction?
+				if (cpt == 0)
 				{
-					if (this.parameters.length == 0) {
-						if(func.indexOf("(") != -1 || func.indexOf(".") != -1  || func.indexOf("[") != -1)
-							this.ret = eval(func);
-						else
-							this.ret = window[func]();
-					}
-				    else if (this.parameters.length <= 11) {
-				        this.ret = window[func](this.parameters[0], this.parameters[1], this.parameters[2], this.parameters[3], this.parameters[4],
-						    this.parameters[5], this.parameters[6], this.parameters[7], this.parameters[8], this.parameters[9], this.parameters[10]);
-				    }
-				    else {
-				        this.ret = window[func](this.parameters[0], this.parameters[1], this.parameters[2], this.parameters[3], this.parameters[4],
-						    this.parameters[5], this.parameters[6], this.parameters[7], this.parameters[8], this.parameters[9], this.parameters[10],
-						    this.parameters[11], this.parameters[12], this.parameters[13], this.parameters[14], this.parameters[15], this.parameters[16],
-						    this.parameters[17], this.parameters[18], this.parameters[19], this.parameters[20], this.parameters[21], this.parameters[22]
-	                        );
-				    }
+					dir = 0;
 				}
-				catch (e)
+				else
 				{
-					console.log("Error on: "+func+" and msg: "+e.message);
-					this.bError = true;
-					this.onErrorCount = this.ho.getEventCount();
-					this.ho.generateEvent(CRunHTML5.CND_JSCRIPT_ONERROR, 0);
-				}
-				this.parameters = null;
-			},
-
-			expression:         function (num)
-			{
-				switch (num)
-				{
-					case CRunHTML5.EXP_JSCRIPT_GETINTRESULT:
-						return this.expGetIntResult();
-					case CRunHTML5.EXP_JSCRIPT_GETFLOATRESULT:
-						return this.expGetNumberResult();
-					case CRunHTML5.EXP_JSCRIPT_GETSTRRESULT:
-						return this.expGetStringResult();
-					case CRunHTML5.EXP_TOTAL:
-						return this.expTotal();
-					case CRunHTML5.EXP_LOADED:
-						return this.expLoaded();
-					case CRunHTML5.EXP_PERCENT:
-						return this.expPercent();
-					case CRunHTML5.EXP_BROWSERNAME:
-						return this.rh.rhApp.browserDetect.browser;
-					case CRunHTML5.EXP_BROWSERVERSION:
-						return this.rh.rhApp.browserDetect.version;
-					case CRunHTML5.EXP_BROWSEROS:
-						return this.rh.rhApp.browserDetect.OS;
-					case CRunHTML5.EXP_GETCOOKIE:
-						return this.expGetCookie();
-					case CRunHTML5.EXP_GETURL:
-						return window.location.href;
-					case CRunHTML5.EXP_GETHOST:
-						return window.location.host;
-					case CRunHTML5.EXP_GETHOSTNAME:
-						return window.location.hostname;
-					case CRunHTML5.EXP_GETHASH:
-						return window.location.hash;
-					case CRunHTML5.EXP_GETSEARCH:
-						return window.location.search;
-				}
-				return 0;
-			},
-			getCookie:          function (name)
-			{
-				var dc = document.cookie;
-				var cname = name + "=";
-
-				if (dc.length > 0)
-				{
-					var begin = dc.indexOf(cname);
-					if (begin != -1)
+					// Appelle le hasard pour trouver le bit
+					cpt = this.rh.random(cpt);
+					das = dirAtStart;
+					for (dir = 0; ; dir++)
 					{
-						begin += cname.length;
-						end = dc.indexOf(";", begin);
-						if (end == -1)
-							end = dc.length;
-						return unescape(dc.substring(begin, end));
+						das2 = das;
+						das >>= 1;
+						if (das2 & 1)
+						{
+							cpt--;
+							if (cpt < 0) break;
+						}
+					}
+				}
+				return dir;
+			},
+
+			initialize: function (file)
+			{
+				file.skipBytes(1);
+				this.m_angle = this.DirAtStart(file.readAInt()) * 180.0 / 16.0;
+				this.m_friction = file.readAInt() / 100.0;
+				this.m_gravity = file.readAInt() / 100.0;
+				this.m_density = file.readAInt() / 100.0;
+				this.m_restitution = file.readAInt() / 100.0;
+				this.m_flags = file.readAInt();
+				this.m_shape = file.readAShort();
+				this.m_identifier = file.readAInt();
+				this.m_linearDamping = file.readAInt() * CRunMvtbox2dstatic.LDAMPINGMULT;
+				this.m_angularDamping = file.readAInt() * CRunMvtbox2dstatic.ADAMPINGMULT;
+				this.m_jointType = file.readAShort();
+				this.m_jointAnchor = file.readAShort();
+				this.m_jointName = file.readAString(CRunBox2DBase.MAX_JOINTNAME);
+				this.m_jointObject = file.readAString(CRunBox2DBase.MAX_JOINTOBJECT);
+				this.m_rJointLLimit = file.readAInt() * Box2D.Common.b2Settings.b2_pi / 180.0;
+				this.m_rJointULimit = file.readAInt() * Box2D.Common.b2Settings.b2_pi / 180.0;
+				this.m_dJointFrequency = file.readAInt();
+				this.m_dJointDamping = file.readAInt() / 100.0;
+				this.m_pJointLLimit = file.readAInt();
+				this.m_pJointULimit = file.readAInt();
+
+				this.m_addVX = 0;
+				this.m_addVY = 0;
+				this.m_addVFlag = false;
+				this.m_previousAngle = -1;
+				this.m_started = false;
+
+				this.m_base = this.GetBase();
+				this.m_body = null;
+				this.InitBase(this.ho, CRunMBase.MTYPE_OBJECT);
+			},
+
+			kill: function ()
+			{
+				var pBase = this.GetBase();
+				if (pBase != null)
+				{
+					pBase.rDestroyBody(this.m_body);
+				}
+			},
+
+			GetBase: function ()
+			{
+				var pOL = 0;
+				var nObjects = 0;
+				for (nObjects = 0; nObjects < this.rh.rhNObjects; pOL++, nObjects++)
+				{
+					while (this.rh.rhObjectList[pOL] == null) pOL++;
+					var pBase = this.rh.rhObjectList[pOL];
+					if (pBase.hoType >= 32)
+					{
+						if (pBase.hoCommon.ocIdentifier == CRun.BASEIDENTIFIER)
+						{
+							if (pBase.ext.identifier == this.m_identifier)
+							{
+								return pBase.ext;
+							}
+						}
 					}
 				}
 				return null;
 			},
-			expGetCookie:       function ()
+
+			CreateBody: function ()
 			{
-				var cookieName = this.ho.getExpParam();
-				var cookie = this.getCookie(cookieName);
-				if (!cookie)
-					cookie = "";
-				return cookie;
-			},
-			expTotal:           function ()
-			{
-				if (this.rh.rhApp.parentApp != null)
-					return this.rh.rhApp.parentApp.imagesToLoad;
-				return 0;
-			},
-			expLoaded:          function ()
-			{
-				if (this.rh.rhApp.parentApp != null)
-					return this.rh.rhApp.parentApp.imagesLoaded;
-				return 0;
-			},
-			expPercent:         function ()
-			{
-				if (this.rh.rhApp.parentApp != null)
+				if (this.m_body != null)
+					return true;
+
+				if (this.m_base == null)
 				{
-					if (this.rh.rhApp.parentApp.imagesToLoad != 0)
+					this.m_base = this.GetBase();
+					if (this.m_base == null)
 					{
-						return (this.rh.rhApp.parentApp.imagesLoaded * 100) / this.rh.rhApp.parentApp.imagesToLoad;
+						if (!bAlerted)
+						{
+							alert("Please drop a Physics - Engine object in the frame.");
+							bAlerted = true;
+						}
 					}
 				}
+
+				if (this.m_base == null)
+					return false;
+
+				var flags = 0;
+				if (this.m_flags & CRunMvtbox2dstatic.B2FLAG_BULLET)
+					flags |= CRunBox2DBase.CBFLAG_BULLET;
+				if (this.m_flags & CRunMvtbox2dstatic.B2FLAG_FIXED)
+					flags |= CRunBox2DBase.CBFLAG_FIXEDROTATION;
+				this.m_body = this.m_base.rCreateBody(Box2D.Dynamics.b2Body.b2_dynamicBody, this.ho.hoX, this.ho.hoY, this.m_angle, this.m_gravity, this, flags, 0);
+				this.m_body.SetLinearDamping(this.m_linearDamping);
+				this.m_body.SetAngularDamping(this.m_angularDamping);
+				if (!this.ho.roa)
+				{
+					this.m_shape = 0;
+					this.m_imgWidth = this.ho.hoImgWidth;
+					this.m_imgHeight = this.ho.hoImgHeight;
+				}
+				else
+				{
+					this.m_image = this.ho.roc.rcImage;
+					var img = this.rh.rhApp.imageBank.getImageFromHandle(this.m_image);
+					this.m_imgWidth = img.width;
+					this.m_imgHeight = img.height;
+				}
+				this.CreateFixture();
+
+				var position = this.m_body.GetPosition();
+				this.m_previousX = position.x;
+				this.m_previousY = position.y;
+
+				return true;
+			},
+
+			CreateFixture: function ()
+			{
+				if (this.m_fixture != null)
+				{
+					this.m_base.rBodyDestroyFixture(this.m_body, this.m_fixture);
+				}
+				this.m_scaleX = this.ho.roc.rcScaleX;
+				this.m_scaleY = this.ho.roc.rcScaleY;
+				switch (this.m_shape)
+				{
+					case 0:
+						this.m_fixture = this.m_base.rBodyCreateBoxFixture(this.m_body, this, this.ho.hoX, this.ho.hoY, this.m_imgWidth * this.m_scaleX, this.m_imgHeight * this.m_scaleY, this.m_density, this.m_friction, this.m_restitution);
+						break;
+					case 1:
+						this.m_fixture = this.m_base.rBodyCreateCircleFixture(this.m_body, this, this.ho.hoX, this.ho.hoY, Math.round((this.ho.hoImgWidth + this.ho.hoImgHeight + 3) / 4 * (this.m_scaleX + this.m_scaleY) / 2), this.m_density, this.m_friction, this.m_restitution);
+						break;
+					case 2:
+						this.m_fixture = this.m_base.rBodyCreateShapeFixture(this.m_body, this, this.ho.hoX, this.ho.hoY, this.ho.roc.rcImage, this.m_density, this.m_friction, this.m_restitution, this.m_scaleX, this.m_scaleY);
+						break;
+				}
+			},
+
+			CreateJoint: function ()
+			{
+				switch (this.m_jointType)
+				{
+					case CRunBox2DBase.JTYPE_REVOLUTE:
+						this.m_base.rJointCreate(this, this.m_jointType, this.m_jointAnchor, this.m_jointName, this.m_jointObject, this.m_rJointLLimit, this.m_rJointULimit);
+						break;
+					case CRunBox2DBase.JTYPE_DISTANCE:
+						this.m_base.rJointCreate(this, this.m_jointType, this.m_jointAnchor, this.m_jointName, this.m_jointObject, this.m_dJointFrequency, this.m_dJointDamping);
+						break;
+					case CRunBox2DBase.JTYPE_PRISMATIC:
+						this.m_base.rJointCreate(this, this.m_jointType, this.m_jointAnchor, this.m_jointName, this.m_jointObject, this.m_pJointLLimit, this.m_pJointULimit);
+						break;
+					default:
+						break;
+				}
+			},
+
+			move: function ()
+			{
+			    if (!this.CreateBody() || this.m_base.isPaused())
+					return false;
+
+				// Scale changed?
+				if (this.ho.roc.rcScaleX != this.m_scaleX || this.ho.roc.rcScaleY != this.m_scaleY)
+					this.CreateFixture();
+
+				this.m_base.rBodyAddVelocity(this.m_body, this.m_addVX, this.m_addVY);
+				this.ResetAddVelocity();
+
+				var o = {};
+				this.m_base.rGetBodyPosition(this.m_body, o);
+				this.m_currentAngle = o.angle;
+				if (o.x != this.ho.hoX || o.y != this.ho.hoY)
+				{
+					this.ho.hoX = o.x;
+					this.ho.hoY = o.y;
+					this.m_started = true;
+					this.ho.roc.rcChanged = true;
+				}
+				this.SetTheAngle(this.m_currentAngle);
+
+				var position = this.m_body.GetPosition();
+				var deltaX = (position.x - this.m_previousX) * this.m_base.factor;
+				var deltaY = (position.y - this.m_previousY) * this.m_base.factor;
+				this.m_previousX = position.x;
+				this.m_previousY = position.y;
+				var length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+	            var timerCoef = 1.0;
+	            if ((this.rh.rhFrame.leFlags & CRunFrame.LEF_TIMEDMVTS) != 0 && this.rh.rh4MvtTimerCoef != 0.0)
+	                timerCoef = this.rh.rh4MvtTimerCoef;
+				this.ho.roc.rcSpeed = Math.floor((50.0 * length / 7.0) / timerCoef);
+				this.ho.roc.rcSpeed = Math.min(this.ho.roc.rcSpeed, 250);
+
+				var anim = CAnim.ANIMID_STOP;
+				if (this.ho.roc.rcSpeed > 0)
+					anim = CAnim.ANIMID_WALK;
+				this.animations(anim);
+				if (this.flags & CRunMvtbox2dstatic.B2FLAG_FINECOLLISIONS)
+					this.collisions();
+
+				// The object has been moved
+				return this.ho.roc.rcChanged != 0;
+			},
+
+			SetTheAngle: function (angle)
+			{
+				if (angle != this.m_previousAngle)
+				{
+					this.m_currentAngle = angle;
+					this.m_previousAngle = angle;
+					this.ho.roc.rcChanged = true;
+					if (this.m_flags & CRunMvtbox2dstatic.B2FLAG_ROTATE)
+					{
+						this.ho.roc.rcAngle = angle;
+						this.ho.roc.rcDir = 0;
+					}
+					else
+					{
+						this.ho.roc.rcDir = Math.floor(angle / 11.25);
+						while (this.ho.roc.rcDir < 0)
+							this.ho.roc.rcDir += 32;
+						while (this.ho.roc.rcDir >= 32)
+							this.ho.roc.rcDir -= 32;
+					}
+				}
+			},
+
+			SetFriction:    function (friction)
+			{
+				this.m_friction = friction / 100.0;
+				this.m_fixture.SetFriction(this.m_friction);
+			},
+			SetGravity:     function (gravity)
+			{
+				this.m_gravity = gravity / 100.0;
+				this.m_body.SetGravityScale(this.m_gravity);
+			},
+			SetDensity:     function (density)
+			{
+				this.m_density = density / 100.0;
+				this.m_base.rBodyResetMassData(this.m_body);
+			},
+			SetRestitution: function (restitution)
+			{
+				this.m_restitution = restitution / 100.0;
+				this.m_fixture.SetRestitution(this.m_restitution);
+			},
+
+			setPosition: function (x, y)
+			{
+				if (x != this.ho.hoX || y != this.ho.hoY)
+				{
+					if (!this.m_started)
+					{
+						this.ho.hoX = x;
+						this.ho.hoY = y;
+					}
+					this.m_base.rBodySetPosition(this.m_body, x, y);
+				}
+			},
+
+			setXPosition: function (x)
+			{
+				if (x != this.ho.hoX)
+				{
+					if (!this.m_started)
+						this.ho.hoX = x;
+					this.m_base.rBodySetPosition(this.m_body, x, CRunBox2DBase.POSDEFAULT);
+				}
+			},
+
+			setYPosition: function (y)
+			{
+				if (y != this.ho.hoY)
+				{
+					if (!this.m_started)
+						this.ho.hoY = y;
+					this.m_base.rBodySetPosition(this.m_body, CRunBox2DBase.POSDEFAULT, y);
+				}
+			},
+
+			setAngle: function (angle)
+			{
+				this.m_base.rBodySetAngle(this.m_body, angle);
+				if (!this.m_started)
+					this.SetTheAngle(angle);
+			},
+
+			getAngle: function ()
+			{
+				if (this.m_flags & CRunMvtbox2dstatic.B2FLAG_ROTATE)
+				{
+					var angle = this.m_currentAngle;
+					while (angle >= 360)
+						angle -= 360;
+					while (angle < 0)
+						angle += 360;
+					return angle;
+				}
+				return CRunMBase.ANGLE_MAGIC;
+			},
+
+			stop: function (bCurrent)
+			{
+				this.SetStopFlag(true);
+				if (this.m_eventCount != this.rh.rh4EventCount)
+				{
+					this.m_base.rBodySetLinearVelocityAdd(this.m_body, 0, 0, 0, 0);
+				}
+			},
+
+			setRotSpeed: function (speed)
+			{
+				var torque = speed / 100.0 * CRunBox2DBase.SETANGULARVELOCITY_MULT;
+				this.m_base.rBodySetAngularVelocity(this.m_body, torque);
+			},
+
+			setSpeed: function (speed)
+			{
+				var speedf = speed / 100.0 * CRunBox2DBase.SETVELOCITY_MULT;
+				var angle;
+				var v = this.m_body.GetLinearVelocity();
+				if (Math.abs(v.x) < 0.001 && Math.abs(v.y) < 0.001)
+					angle = this.m_base.rBodyGetAngle(this.m_body);
+				else
+					angle = Math.atan2(v.y, v.x) * 180.0 / Box2D.Common.b2Settings.b2_pi;
+				this.m_base.rBodySetLinearVelocity(this.m_body, speedf, angle);
+			},
+
+			setDec: function (dec)
+			{
+				this.m_linearDamping = dec * CRunMvtbox2dstatic.LDAMPINGMULT;
+				this.m_body.SetLinearDamping(this.m_linearDamping);
+			},
+
+			getDeceleration: function ()
+			{
+				return Math.floor(this.m_linearDamping / CRunMvtbox2dstatic.LDAMPINGMULT);
+			},
+
+			setDir: function (dir)
+			{
+				this.m_base.rBodySetAngle(this.m_body, dir * 11.25);
+				if (!this.m_started)
+					this.SetTheAngle(dir * 11.25);
+			},
+
+			getDir: function ()
+			{
+				if (this.m_flags & CRunMvtbox2dstatic.B2FLAG_ROTATE)
+					return Math.floor(this.m_currentAngle / 11.25);
+				else
+					return this.ho.roc.rcDir;
+			},
+
+
+			setGravity: function (gravity)
+			{
+				this.m_gravity = gravity / 100.0;
+				this.m_body.SetGravityScale(this.m_gravity);
+			},
+
+			getSpeed: function ()
+			{
+				return this.ho.roc.rcSpeed;
+			},
+
+			getGravity: function ()
+			{
+				return this.m_gravity * 100.0;
+			},
+
+			actionEntry: function (action)
+			{
+				if (this.m_base == null)
+					return 0;
+
+				switch (action)
+				{
+					case CAct.ACT_EXTSETGRAVITYSCALE:
+						this.SetGravity(this.getParam());
+						break;
+					case CAct.ACT_EXTSETFRICTION:
+						this.SetFriction(this.getParam());
+						break;
+					case CAct.ACT_EXTSETELASTICITY:
+						this.SetRestitution(this.getParam());
+						break;
+					case CAct.ACT_EXTSETDENSITY:
+						this.SetDensity(this.getParam());
+						break;
+					case CAct.ACT_EXTAPPLYIMPULSE:
+						var force = this.getParam()[0] / 100.0 * CRunBox2DBase.APPLYIMPULSE_MULT;
+						var angle = this.getParam()[1];
+						this.m_base.rBodyApplyMMFImpulse(this.m_body, force, angle);
+						break;
+					case CAct.ACT_EXTAPPLYANGULARIMPULSE:
+						var torque = this.getParam() / 100.0 * CRunBox2DBase.APPLYANGULARIMPULSE_MULT;
+						this.m_base.rBodyApplyAngularImpulse(this.m_body, torque);
+						break;
+					case CAct.ACT_EXTAPPLYFORCE:
+						var force = this.getParam()[0] / 100.0 * CRunBox2DBase.APPLYFORCE_MULT;
+						var angle = this.getParam()[1];
+						this.m_base.rBodyApplyForce(this.m_body, force, angle);
+						break;
+					case CAct.ACT_EXTAPPLYTORQUE:
+						var torque = this.getParam() / 100.0 * CRunBox2DBase.APPLYTORQUE_MULT;
+						this.m_base.rBodyApplyTorque(this.m_body, torque);
+						break;
+					case CAct.ACT_EXTSETLINEARVELOCITY:
+						var force = this.getParam()[0] / 100.0 * CRunBox2DBase.SETVELOCITY_MULT;
+						var angle = this.getParam()[1];
+						this.m_base.rBodySetLinearVelocity(this.m_body, force, angle);
+						break;
+					case CAct.ACT_EXTSETANGULARVELOCITY:
+						var torque = this.getParam() / 100.0 * CRunBox2DBase.SETANGULARVELOCITY_MULT;
+						this.m_base.rBodySetAngularVelocity(this.m_body, torque);
+						break;
+					case CAct.ACT_EXTSTOPFORCE:
+						this.m_base.rBodyStopForce(this.m_body);
+						break;
+					case CAct.ACT_EXTSTOPTORQUE:
+						this.m_base.rBodyStopTorque(this.m_body);
+						break;
+					case CExp.EXP_EXTGETFRICTION:
+						return this.m_friction * 100;
+					case CExp.EXP_EXTGETRESTITUTION:
+						return this.m_restitution * 100;
+					case CExp.EXP_EXTGETDENSITY:
+						return this.m_density * 100;
+					case CExp.EXP_EXTGETVELOCITY:
+						var v = this.m_body.GetLinearVelocity();
+						var velocity = Math.sqrt(v.x * v.x + v.y * v.y) * 100.0 / CRunBox2DBase.SETVELOCITY_MULT;
+						if (velocity < 0.001)
+							velocity = 0;
+						return velocity;
+					case CExp.EXP_EXTGETANGLE:
+						var v = this.m_body.GetLinearVelocity();
+						if (Math.abs(v.x) < 0.001 && Math.abs(v.y) < 0.001)
+							return -1;
+						var angle = Math.atan2(v.y, v.x) * 180.0 / 3.141592653589;
+						if (angle < 0)
+							angle = 360 + angle;
+						return angle;
+					case CExp.EXP_EXTGETMASS:
+						return this.m_body.GetMass();
+				    case CExp.EXP_EXTGETANGULARVELOCITY:
+				        return (this.m_body.GetAngularVelocity() * 100.0) / CRunBox2DBase.SETANGULARVELOCITY_MULT;
+				    default:
+						break;
+				}
 				return 0;
-			},
-			expGetStringResult: function ()
-			{
-				if (typeof this.ret == "string")
-					return this.ret;
-				return "";
-			},
-			expGetNumberResult: function ()
-			{
-				if (typeof this.ret == "number")
-					return this.ret;
-				return "";
-			},
-			expGetIntResult:    function ()
-			{
-				if (typeof this.ret == "number")
-					return CServices.floatToInt(this.ret);
-				return "";
 			}
 		});
-
 
 
 
