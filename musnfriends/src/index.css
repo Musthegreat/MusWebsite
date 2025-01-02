@@ -1,0 +1,14 @@
+.card{
+  margin-left: 100px;
+  margin-right: 100px;
+
+  border-radius: 20px;
+  box-shadow: 5px 5px 5px hsl(0, 0%, 80%);
+}
+
+#pfp{
+  border-radius: 20px;
+  position: relative;
+  margin-left: atuo;
+  box-shadow: 0 2px 12px black;
+}
