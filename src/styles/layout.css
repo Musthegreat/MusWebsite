@@ -1,0 +1,33 @@
+#link {
+    color: rgb(241, 228, 220);
+    
+    text-decoration: none;
+    font-size:large;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    
+    padding: 5px;
+    flex-grow: 1;
+}
+
+#link:hover {
+    background-color: rgba(228, 191, 167, 0.26);
+}
+
+#link:focus {
+    background-color: rgb(122, 94, 76);
+}
+
+nav {
+    margin:0;
+    display: flex;
+    width: fit-content;
+    padding: 0.3%;
+}
+
+#header {
+    background-image: linear-gradient(90deg, rgb(104, 79, 62), rgb(121, 96, 81), rgb(104, 79, 62));
+}
+
+body {
+    margin:0;
+}
