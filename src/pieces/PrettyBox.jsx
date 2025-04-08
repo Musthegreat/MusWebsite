@@ -1,4 +1,5 @@
-import "/src/styles/common.css";
+import { Outlet, Link } from "react-router-dom";
+import "/src/styles/musgroups.css";
 
 function PrettyBox(props) {
 
@@ -7,8 +8,16 @@ function PrettyBox(props) {
             <div id="feature1_A">
                 <h4 id="featureTitle">{props.title}</h4>
                 <p>{props.body}</p>
+                
+                
+                <Link to={props.to} id="linky">Learn more</Link>
+                <p/>
             </div>
+
+            <Outlet />
         </div>
+
+       
     );
 }
 

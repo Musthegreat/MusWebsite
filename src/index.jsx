@@ -3,8 +3,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./pages/Layout"; 
 import Landing from "./pages/Landing"; 
 import Privacy_Policy from "./pages/policies/Privacy_Policy"; 
-import MusGroups from "./pages/musgroups";
-import NoPage from "./pages/NoPage"; 
+import NoPage from "./pages/NoPage";
+
+import MusGroups from "./pages/MusGroups";
+import Groups from "./pages/musgroupsWiki/Groups";
 
 export default function App() {   
     return (     
@@ -14,6 +16,12 @@ export default function App() {
             <Route index element={<Landing />} />                     
             <Route path="privacy_policy" element={<Privacy_Policy />} />
             <Route path="musgroups" element={<MusGroups />} />         
+            <Route path="groups" element={<Groups />} />
+            <Route path="*" element={<NoPage />} />
+            <Route path="*" element={<NoPage />} />
+            <Route path="*" element={<NoPage />} />
+            <Route path="*" element={<NoPage />} />
+            <Route path="*" element={<NoPage />} />
             <Route path="*" element={<NoPage />} />         
             </Route>       
         </Routes>     
