@@ -7,13 +7,13 @@ function MusGroups() {
   return(
     <>
     
-    <h1>MusGroups - Feature list</h1> 
+    <h1>MusGroups - Documentation</h1> 
     <h3>News and information about Mus's godot tool.</h3>
 
     <p></p>
 
     
-    <div id="grid">
+    <div class="container">
         <PrettyBox 
         title="Groups - Class" 
         body="The main class in my API which allows users to clone, modify, search for, and delete groups in the scene.
@@ -29,6 +29,14 @@ function MusGroups() {
         title="More Soon"
         body="Im gonna be adding some checklists to these groups so that everyone can more closely follow development, and I might expand this
         to become a wiki for the API since this is a lot to memorize specially with the mix of lua, godot, and API functions."/>
+
+        <PrettyBox
+        title="bufoonery"/>
+        
+        <PrettyBox/>
+        <PrettyBox/>
+        <PrettyBox/>
+        <PrettyBox/>
 
           
     </div>
